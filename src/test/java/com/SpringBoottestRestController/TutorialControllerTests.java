@@ -6,6 +6,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -65,5 +68,20 @@ public class TutorialControllerTests {
 	         .andExpect(status().isNotFound())
 	         .andDo(print());
 	  }
+	  
+	  @Test
+	  void shouldReturnListOfTutorials() throws Exception {
+	    List<Tutorial> tutorials = new ArrayList<>(
+	        Arrays.asList(new Tutorial(1, "Spring Boot @WebMvcTest 1", "Description 1", true),
+	            new Tutorial(2, "Spring Boot @WebMvcTest 2", "Description 2", true),
+	            new Tutorial(3, "Spring Boot @WebMvcTest 3", "Description 3", true)));
+
+	    when(tutorialRepository.findAll()).thenReturn(tutorials);
+	    mockMvc.perform(get("/api/tutorials"))
+	        .andExpect(status().isOk())
+	        .andExpect(jsonPath("$.size()").value(tutorials.size()))
+	        .andDo(print());
+	  }
+
 
 }
