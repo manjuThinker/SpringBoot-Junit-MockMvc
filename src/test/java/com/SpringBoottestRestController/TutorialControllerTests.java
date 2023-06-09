@@ -6,6 +6,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -14,6 +18,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import com.SpringBoottestRestController.controller.TutorialController;
 import com.SpringBoottestRestController.model.Tutorial;
@@ -65,5 +71,44 @@ public class TutorialControllerTests {
 	         .andExpect(status().isNotFound())
 	         .andDo(print());
 	  }
+	  
+	  @Test
+	  void shouldReturnListOfTutorials() throws Exception {
+	    List<Tutorial> tutorials = new ArrayList<>(
+	        Arrays.asList(new Tutorial(1, "Spring Boot @WebMvcTest 1", "Description 1", true),
+	            new Tutorial(2, "Spring Boot @WebMvcTest 2", "Description 2", true),
+	            new Tutorial(3, "Spring Boot @WebMvcTest 3", "Description 3", true)));
+
+	    when(tutorialRepository.findAll()).thenReturn(tutorials);
+	    mockMvc.perform(get("/api/tutorials"))
+	        .andExpect(status().isOk())
+	        .andExpect(jsonPath("$.size()").value(tutorials.size()))
+	        .andDo(print());
+	  }
+	  
+	  @Test
+	  void shouldReturnListOfTutorialsWithFilter() throws Exception {
+	    List<Tutorial> tutorials = new ArrayList<>(
+	        Arrays.asList(new Tutorial(1, "Spring Boot @WebMvcTest", "Description 1", true),
+	            new Tutorial(3, "Spring Boot Web MVC", "Description 3", true)));
+
+	    String title = "Boot";
+	    MultiValueMap<String, String> paramsMap = new LinkedMultiValueMap<>();
+	    paramsMap.add("title", title);
+
+	    when(tutorialRepository.findByTitleContaining(title)).thenReturn(tutorials);
+	    mockMvc.perform(get("/api/tutorials").params(paramsMap))
+	        .andExpect(status().isOk())
+	        .andExpect(jsonPath("$.size()").value(tutorials.size()))
+	        .andDo(print());
+
+	    tutorials = Collections.emptyList();
+
+	    when(tutorialRepository.findByTitleContaining(title)).thenReturn(tutorials);
+	    mockMvc.perform(get("/api/tutorials").params(paramsMap))
+	        .andExpect(status().isNoContent())
+	        .andDo(print());
+	  }
+
 
 }
